@@ -1,5 +1,6 @@
 const express = require('express');
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+
 const app = express();
 const { PORT = 3000 } = process.env;
 
@@ -7,7 +8,7 @@ mongoose.connect('mongodb://localhost:27017/mydb', {
   useNewUrlParser: true,
   // useCreateIndex: true,
   // useFindAndModify: false
-}, err => {
+}, (err) => {
   if (err) {
     console.error('Unable to connect to mongodb', err);
   } else {
@@ -23,7 +24,6 @@ mongoose.connect('mongodb://localhost:27017/mydb', {
 //   next();
 // });
 
-
 app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`)
-})
+  console.log(`App listening on port ${PORT}`);
+});
