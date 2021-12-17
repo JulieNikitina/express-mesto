@@ -10,19 +10,15 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose.connect('mongodb://localhost:27017/mydb', {
   useNewUrlParser: true,
-  // useCreateIndex: true,
-  // useFindAndModify: false
 }, (err) => {
   if (err) {
     console.error('Unable to connect to mongodb', err);
-  } else {
-    console.log('Successfully connected to mongodb');
   }
 });
 
 app.use((req, res, next) => {
   req.user = {
-    _id: '61bb73c6002a7567b5a7d1a8'
+    _id: '61bb73c6002a7567b5a7d1a8',
   };
   next();
 });
