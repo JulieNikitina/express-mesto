@@ -26,6 +26,10 @@ app.use((req, res, next) => {
 app.use('/users', require('./routes/user'));
 app.use('/cards', require('./routes/card'));
 
+app.use((req, res) => {
+  res.status(404).send({ message: 'Пока запрашиваемой вами страницы нет, но не отчаивайтесь, возмоно она появится' });
+});
+
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });

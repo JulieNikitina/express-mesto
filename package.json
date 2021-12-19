@@ -22,13 +22,12 @@
   "homepage": "https://github.com/JulieNikitina/express-mesto#readme",
   "devDependencies": {
     "eslint": "^8.4.1",
-    "eslint-plugin-react": "^7.27.1",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.25.3",
     "nodemon": "^2.0.15"
   },
   "dependencies": {
     "body-parser": "^1.19.1",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.25.3",
     "express": "^4.17.1",
     "mongoose": "^6.1.1"
   }
