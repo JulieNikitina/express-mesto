@@ -3,123 +3,128 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
+const InternalError = require('../errors/internal-error');
+const NotFoundError = require('../errors/not-found-error');
+const BadRequestError = require('../errors/bad-request-error');
+const ConflictError = require('../errors/conflict-error');
 
-const BAD_REQUEST_CODE = 400;
-const NOT_FOUND_CODE = 404;
-const INTERNAL_SERVER_ERROR_CODE = 500;
 const { NODE_ENV, JWT_SECRET } = process.env;
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
-    .then((users) => res.send({users}))
-    .catch(() => res.status(INTERNAL_SERVER_ERROR_CODE).send({message: 'Произошла ошибка'}));
+    .then((users) => res.send({ users }))
+    .catch(() => next(new InternalError()));
 };
 
-module.exports.getCurrentUserInfo = (req, res) => {
-  console.log(req.user)
+module.exports.getCurrentUserInfo = (req, res, next) => {
+  console.log(req.user);
   User.findById(req.user._id)
     .then((user) => {
-        res.send({user});
+      res.send({ user });
     })
-    .catch(() => {
-        res.status(INTERNAL_SERVER_ERROR_CODE).send({message: 'Произошла ошибка'});
-    });
+    .catch(() => next(new InternalError()));
 };
 
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (user) {
-        res.send({user});
+        res.send({ user });
       } else {
-        res.status(NOT_FOUND_CODE).send({message: 'Пользователь не найден'});
+        next(new NotFoundError('Пользователь не найден'));
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(BAD_REQUEST_CODE).send({message: 'Переданы некорректные данные'});
+        next(new BadRequestError('Переданы неверные данные'));
       } else {
-        res.status(INTERNAL_SERVER_ERROR_CODE).send({message: 'Произошла ошибка'});
+        next(new InternalError());
       }
     });
 };
 
-module.exports.createUser = (req, res) => {
-  const {email, password, name, about, avatar} = req.body;
+module.exports.createUser = (req, res, next) => {
+  const {
+    email, password, name, about, avatar,
+  } = req.body;
   if (validator.isEmail(email) !== true) {
-    res.status(BAD_REQUEST_CODE).send({message: 'То что вы ввели - не имеил'});
-    return
+    next(new BadRequestError('То что вы ввели - не email'));
+    return;
   }
   bcrypt.hash(password, 10)
-    .then(hash => User.create({email, password: hash, name, about, avatar})
-      .then((user) => res.status(201).send({user})))
+    .then((hash) => User.create({
+      email, password: hash, name, about, avatar,
+    })
+      .then((user) => res.status(201).send({ user })))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST_CODE).send({message: 'Переданы некорректные данные'});
+        next(new BadRequestError('Переданы неверные данные'));
       } else {
-        res.status(INTERNAL_SERVER_ERROR_CODE).send({message: 'Произошла ошибка'});
+        next(new InternalError());
       }
     });
 };
 
-module.exports.updateUserInfo = (req, res) => {
-  const {name, about} = req.body;
-  User.findByIdAndUpdate(req.user._id, {name, about}, {new: true, runValidators: true})
+module.exports.updateUserInfo = (req, res, next) => {
+  const { name, about } = req.body;
+  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (user) {
-        res.send({user});
+        res.send({ user });
       } else {
-        res.status(NOT_FOUND_CODE).send({message: 'Пользователь не найден'});
+        next(new NotFoundError('Пользователь не найден'));
       }
     })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
-        res.status(BAD_REQUEST_CODE).send({message: 'Переданы некорректные данные'});
+        next(new BadRequestError('Переданы неверные данные'));
       } else {
-        res.status(INTERNAL_SERVER_ERROR_CODE).send({message: 'Произошла ошибка'});
+        next(new InternalError());
       }
     });
 };
 
-module.exports.updateAvatar = (req, res) => {
-  const {avatar} = req.body;
-  User.findByIdAndUpdate(req.user._id, {avatar}, {new: true, runValidators: true})
+module.exports.updateAvatar = (req, res, next) => {
+  const { avatar } = req.body;
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (user) {
-        res.send({user});
+        res.send({ user });
       } else {
-        res.status(NOT_FOUND_CODE).send({message: 'Пользователь не найден'});
+        next(new NotFoundError('Пользователь не найден'));
       }
     })
     .catch((err) => {
       if (err.name === 'ValidationError' || err.name === 'CastError') {
-        res.status(BAD_REQUEST_CODE).send({message: 'Переданы некорректные данные'});
+        next(new BadRequestError('Переданы неверные данные'));
       } else {
-        res.status(INTERNAL_SERVER_ERROR_CODE).send({message: 'Произошла ошибка'});
+        next(new InternalError());
       }
     });
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign(
         { _id: user._id },
         NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
-        { expiresIn: '7d'}
+        { expiresIn: '7d' },
       );
       res
         .cookie('jwt', token, {
           maxAge: 3600000,
           httpOnly: true,
-          sameSite: true
+          sameSite: true,
         })
         .end();
     })
     .catch((err) => {
-      res
-        .status(401)
-        .send({ message: err.message });
+      if (err.name === 'MongoError' && err.code === 11000) {
+        next(new ConflictError('У нас уже есть пользователь с таким email, ты точно еще не регистрировался?'));
+      } else {
+        next(new InternalError());
+      }
     });
 };
