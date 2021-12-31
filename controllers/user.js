@@ -56,6 +56,8 @@ module.exports.createUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Переданы неверные данные'));
+      } else if (err.name === 'MongoServerError' && err.code === 11000) {
+        next(new ConflictError('У нас уже есть пользователь с таким email, ты точно еще не регистрировался?'));
       } else {
         next(new InternalError());
       }
@@ -117,11 +119,7 @@ module.exports.login = (req, res, next) => {
         })
         .end();
     })
-    .catch((err) => {
-      if (err.name === 'MongoError' && err.code === 11000) {
-        next(new ConflictError('У нас уже есть пользователь с таким email, ты точно еще не регистрировался?'));
-      } else {
-        next(new InternalError());
-      }
+    .catch(() => {
+      next(new InternalError());
     });
 };
