@@ -40,7 +40,7 @@ app.post(
       password: Joi.string().min(8).required(),
       name: Joi.string().min(2).max(30),
       about: Joi.string().min(2).max(30),
-      avatar: Joi.string().pattern(regExp).required(),
+      avatar: Joi.string().pattern(regExp),
     }).unknown(true),
   }),
   createUser,
@@ -55,6 +55,9 @@ app.use((req, res, next) => {
 
 app.use(errors());
 
+// Все 4 параметра обязательны чтобы работала мидлвара перехвата ошибок,
+// но при этом "next" не используется.
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   // Прописываем дефолты на случай если внезапно прилетело что-то неожиданное
   res.status(err.statusCode || 500);
@@ -62,5 +65,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`App listening on port ${PORT}`);
+  console.info(`App listening on port ${PORT}`);
 });
