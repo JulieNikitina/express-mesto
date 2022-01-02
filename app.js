@@ -56,11 +56,10 @@ app.use((req, res, next) => {
 });
 
 app.use(errors());
+
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   // Прописываем дефолты на случай если внезапно прилетело что-то неожиданное
-  if (res.headersSent) {
-    return next(err)
-  }
   res.status(err.statusCode || 500);
   res.send({ message: err.message || 'Неизвестная ошибка' });
 });
