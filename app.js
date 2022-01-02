@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const { errors, celebrate, Joi } = require('celebrate');
+const cookieParser = require('cookie-parser');
 const { login, createUser } = require('./controllers/user');
 const auth = require('./middlewares/auth');
 const regExp = require('./utils/regexp');
@@ -13,6 +14,7 @@ const { PORT = 3000 } = process.env;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 mongoose.connect('mongodb://localhost:27017/mydb', {
   useNewUrlParser: true,
@@ -54,12 +56,11 @@ app.use((req, res, next) => {
 });
 
 app.use(errors());
-
-// Все 4 параметра обязательны чтобы работала мидлвара перехвата ошибок,
-// но при этом "next" не используется.
-// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   // Прописываем дефолты на случай если внезапно прилетело что-то неожиданное
+  if (res.headersSent) {
+    return next(err)
+  }
   res.status(err.statusCode || 500);
   res.send({ message: err.message || 'Неизвестная ошибка' });
 });
